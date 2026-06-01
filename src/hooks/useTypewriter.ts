@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 
-export function useTypewriter(text: string, speed = 38, startDelay = 300) {
+export function useTypewriter(text: string, speed = 38, startDelay = 400) {
   const [displayed, setDisplayed] = useState('')
   const [done, setDone] = useState(false)
   const idx = useRef(0)
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    idx.current = 0
+    setDisplayed('')
+    setDone(false)
+
+    const delay = setTimeout(() => {
       const interval = setInterval(() => {
         idx.current++
         setDisplayed(text.slice(0, idx.current))
@@ -15,9 +19,14 @@ export function useTypewriter(text: string, speed = 38, startDelay = 300) {
           setDone(true)
         }
       }, speed)
-      return () => clearInterval(interval)
+      // store interval ref for cleanup
+      ;(delay as any).__interval = interval
     }, startDelay)
-    return () => clearTimeout(timeout)
+
+    return () => {
+      clearTimeout(delay)
+      if ((delay as any).__interval) clearInterval((delay as any).__interval)
+    }
   }, [text, speed, startDelay])
 
   return { displayed, done }
